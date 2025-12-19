@@ -1,0 +1,177 @@
+\documentclass[a4paper,12pt]{article}
+
+% --- Page Setup and Margins (A4, 2cm) ---
+\usepackage{geometry}
+\geometry{a4paper, margin=2cm}
+
+% --- Font Settings (Times New Roman) ---
+\usepackage{mathptmx}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+
+% --- Line Spacing (1.15) ---
+\renewcommand{\baselinestretch}{1.15}
+
+% --- Section Heading Sizes (Strictly 12pt) ---
+\usepackage{titlesec}
+
+\titleformat{\section}
+  {\normalfont\fontsize{12pt}{14pt}\bfseries}{\thesection}{1em}{}
+
+\titleformat{\subsection}
+  {\normalfont\fontsize{12pt}{14pt}\bfseries}{\thesubsection}{1em}{}
+
+% --- Packages ---
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{float}
+
+% --- Language and Bibliography ---
+\usepackage[romanian]{babel}
+\usepackage[backend=biber,style=ieee]{biblatex}
+\addbibresource{references.bib}
+
+\graphicspath{ {./images/} }
+
+\begin{document}
+
+% --- Custom Title Block ---
+\begin{center}
+    \begin{minipage}{0.45\textwidth}
+        \centering
+        \includegraphics[height=2cm]{cs.png}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.45\textwidth}
+        \centering
+        \includegraphics[height=2cm]{upb.png}
+    \end{minipage}
+    
+    \vspace{0.5cm}
+    
+    {\fontsize{14pt}{17pt}\selectfont \textbf{Metodele de învățare prin ansamblu domină regresia și predicția}\par}
+    
+    \vspace{0.3cm}
+    
+    {\fontsize{12pt}{14pt}\selectfont \textbf{Mihnea-Andrei Bloțiu - SRIC2 - mihnea.blotiu@upb.ro}\par}
+    {\fontsize{12pt}{14pt}\selectfont \textbf{Facultatea de Automatică și Calculatoare}\par}
+    {\fontsize{12pt}{14pt}\selectfont \textbf{Universitatea Națională de Știință și Tehnologie Politehnica București}\par}
+    
+    \vspace{0.5cm}
+\end{center}
+
+\begin{abstract}
+Problemele reale de lucru cu date din viața reală precum: estimarea prețurilor imobiliare, calculul primelor de asigurare sau analiza piețelor financiare au adus metodele de regresie și predicție în atenția științei datelor încă de la începutul acesteia. Astfel, în legătură cu tematica proiectului, acest eseu susține faptul că abordările de învățare prin ansamblu precum Random Forest și XGBoost, oferă în general performanțe superioare atât față de metodele clasice precum regresia liniară cât și față de metodele statistice utilizate pentru informații temporale precum Prophet sau ARIMA. Ipoteza este susținută atât prin trei studii de caz ce atacă problemele din viața reală menționate anterior cât și prin referință la câteva lucrări din bibliografie ce au introdus metodele în cauză. Rezultatele obținute confirmă superioritatea metodelor de învățare prin ansamblu în scenariile analizate, evidențiind capacitatea acestora de a captura relații neliniare și interacțiuni complexe între variabile. Validarea completă a ipotezei va fi realizată și prin adăugarea a încă trei studii de caz suplimentare în cadrul prezentării finale a proiectului.
+\end{abstract}
+
+\section{Introducere}
+Știința datelor cuprinde multe domenii, printre care, de interes este relația dintre mai multe variabile și anticiparea valorilor viitoare ale acestora. Utilitatea acestor metode de regresie și predicție este demonstrată de numeroase seturi de date și competiții care abordează diferite probleme reale, precum:
+\begin{itemize}
+    \item Predicția prețurilor locuințelor pe baza diferitelor caracteristici ale acestora \cite{house_prices_kaggle} (atât pentru cumpărători cât și pentru vânzători);
+    \item Estimarea primelor de asigurare în funcție de profilul clienților \cite{insurance_dataset};
+    \item Analiza piețelor financiare \cite{stock_dataset} (pentru înțelegerea tendințelor și luarea deciziilor de tranzacționare), etc.
+\end{itemize}
+
+Se pot distinge două abordări principale pentru astfel de probleme. Pe de o parte, există exemplul clasic al regresiei liniare ca una dintre cele mai vechi și utilizate tehnici statistice ce presupune o relație liniară între predictori și variabila țintă. Pe de altă parte, există metodele de învățare prin ansamblu, precum Random Forest \cite{breiman2001random} și XGBoost \cite{chen2016xgboost} ce pot surprinde și relații neliniare complexe sau interacțiuni între variabile. În contrast, pentru serii temporale, metodele statistice precum Prophet \cite{taylor2018prophet} și ARIMA se bazează pe descompunerea în componente de trend și sezonalitate.
+
+Acest eseu conturează faptul că metodele bazate pe învățare prin ansamblu oferă performanțe superioare în problemele de predicție atât față de regresia liniară tradițională, cât și față de metodele statistice bazate pe descompuneri temporale. Această afirmație este susținută de rezultatele obținute în studiile de caz prezentate în secțiunile următoare.
+\section{Abordări}
+
+\subsection{Regresia Liniară}
+
+Regresia liniară, având în vedere că este unul dintre cele mai simple modele matematice, beneficiază de \textbf{interpretabilitatea} ridicată. Acest lucru se întâmplă deoarece putem vedea direct influența fiecărui coeficient și implicit influența fiecărui predictor asociat unui coeficient în variabila finală prezisă. De exemplu, în predicția prețurilor imobiliare (Secțiunea \ref{sec:house}), putem afla exact cât adaugă fiecare metru pătrat la prețul final al unui apartament.
+
+Dezavantajul major, prin definiție este \textbf{presupunerea de liniaritate}. În realitate, relațiile sunt adesea neliniare, de exemplu, în aceeași situație cu imobilele (Secțiunea \ref{sec:house}), prețul pe metru pătrat poate varia în funcție de suprafața totală neliniar (cu cât cumperi mai mult, cu atât plătești mai puțin). 
+
+De asemenea, o altă problemă majoră ar putea fi \textbf{existența unei variabile intermediare} în relația de dependență. De exemplu, în estimarea primelor de asigurare (Secțiunea \ref{sec:insurance}), fumatul nu afectează direct costurile primei de asigurare, ci mai degrabă prin intermediul stării de sănătate, un efect pe care regresia liniară simplă nu îl poate modela explicit.
+
+\subsection{Metodele de învățare prin ansamblu}
+Random Forest \cite{breiman2001random} și XGBoost \cite{chen2016xgboost}, combină predicțiile mai multor modele cu scopul de a obține un rezultat final. Comparativ cu \textbf{Regresia liniară}, principalul avantaj este \textbf{captarea automată a relațiilor neliniare și a interacțiunilor} între variabile, adresând exact problemele menționate anterior.
+
+Dezavantajul principal este \textbf{lipsa interpretabilității} deoarece în astfel de modele, apare fenomenul de ``black box'', fiind dificil de explicat exact de ce o predicție are o anumită valoare și cum anume s-a ajuns la acest rezultat. De asemenea, ca marea majoritate a modelelor din zona de învățare automată, performanța depinde de foarte multe ori de alegerea corectă a hiperparametrilor, un proces foarte costisitor pentru resurse și timp.
+
+\subsection{Alte Abordări Posibile}
+Pentru prognoza seriilor temporale, metodele statistice precum Prophet \cite{taylor2018prophet} și ARIMA sunt o posibilitate de rezolvare, în principal bazată pe descompunerea în componente (trend și sezonalitate). Aceste metode sunt analizate în Secțiunea \ref{sec:stock}, unde sunt comparate cu metodele de învățare prin ansamblu.
+
+Pe lângă abordările analizate, deși nu fac obiectul prezentării, există și alte metode care pot fi explorate în lucrări viitoare. În acest sens, rețelele neuronale profunde reprezintă o alternativă modernă. Cu toate acestea, Grinsztajn et al. \cite{grinsztajn2022tree} susține că metodele bazate pe arbori le depășesc în problemele de regresie pe date structurate, precum cele din studiile noastre de caz.
+
+\section{Studii de Caz \cite{github_repo}}
+
+\subsection{Predicția Prețurilor Imobiliare}
+\label{sec:house}
+
+În predicția prețurilor locuințelor \cite{house_prices_kaggle}, primul set de date conține 545 de proprietăți cu 13 caracteristici. Am aplicat regresia liniară pentru prezicerea prețurilor, iar rezultatele obținute sunt prezentate în Tabelul \ref{tab:house_results}.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{lcc}
+\toprule
+\textbf{Metric} & \textbf{Antrenament} & \textbf{Test} \\
+\midrule
+R² Score & 0.667 & 0.648 \\
+MAE & 0.422 & 0.527 \\
+RMSE & 0.578 & 0.722 \\
+\bottomrule
+\end{tabular}
+\caption{Performanța regresiei liniare pentru predicția prețurilor imobiliare.}
+\label{tab:house_results}
+\end{table}
+
+Modelul explică aproximativ 65\% din varianța prețurilor. Diferența mică între performanța pe setul de antrenament și test (R² = 0.667 vs 0.648) indică o bună generalizare, însă există loc pentru îmbunătățire prin aplicarea metodelor de învățare prin ansamblu.
+
+\subsection{Estimarea Primelor de Asigurare}
+\label{sec:insurance}
+
+Predicția cheltuielilor medicale individuale \cite{insurance_dataset} pentru primele de asigurare a reprezentat al doilea studiu de caz. Setul de date conține 1338 de intrări cu 7 caracteristici fiecare. Am comparat Regresia Liniară cu Random Forest \cite{breiman2001random}. Rezultatele sunt prezentate în Tabelul \ref{tab:insurance_results}.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Model} & \textbf{R² (Antrenament)} & \textbf{R² (Test)} & \textbf{MAE Test (\$)} & \textbf{RMSE Test (\$)} \\
+\midrule
+Regresie Liniară & 0.729 & 0.794 & 4,077 & 5,965 \\
+Random Forest & 0.930 & 0.881 & 2,575 & 4,543 \\
+\bottomrule
+\end{tabular}
+\caption{Comparația performanței modelelor pentru estimarea primelor de asigurare.}
+\label{tab:insurance_results}
+\end{table}
+
+Random Forest a obținut R² = 0.930 pe antrenament și 0.881 pe test, față de 0.729/0.794 pentru regresia liniară. Așadar, performanța pe test este superioară în cazul Random Forest. De asemenea, MAE a scăzut de la \$4,077 la \$2,575, iar RMSE a scăzut de la \$5,965 la \$4,543.
+
+\subsection{Prognoza Prețurilor Acțiunilor}
+\label{sec:stock}
+
+Al treilea studiu de caz se referă la analiza piețelor financiare și explicit la analiza acțiunii Adobe (ADBE) \cite{stock_dataset}. Am comparat XGBoost \cite{chen2016xgboost} cu două metode statistice: Prophet și ARIMA. Este important de menționat că Prophet și ARIMA \textbf{nu sunt metode de învățare prin ansamblu}, ci metode statistice bazate pe descompunerea seriilor temporale. Rezultatele comparative sunt prezentate în Tabelul \ref{tab:stock_results}.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{lccc}
+\toprule
+\textbf{Model} & \textbf{RMSE (\$)} & \textbf{MAPE (\%)} & \textbf{Acuratețe (\%)} \\
+\midrule
+XGBoost & 4.21 & 1.39 & 98.61 \\
+Prophet & 36.11 & 7.79 & 92.21 \\
+ARIMA & 57.85 & 15.62 & 84.38 \\
+\bottomrule
+\end{tabular}
+\caption{Comparația performanței modelelor pentru prognoza prețurilor acțiunilor.}
+\label{tab:stock_results}
+\end{table}
+
+XGBoost a obținut o acuratețe de 98.61\% pe setul de test, depășind semnificativ metodele statistice tradiționale. Eroarea medie (RMSE = \$4.21) este de aproximativ 9 ori mai mică decât cea a Prophet și de 14 ori mai mică decât cea a ARIMA.
+
+\section{Concluzii}
+În concluzie, atât studiile de caz prezentate cât și referințele utilizate susțin ipoteza că metodele de învățare prin ansamblu oferă performanțe în general superioare în problemele de regresie și predicție (Random Forest a depășit regresia liniară în estimarea primelor de asigurare, iar XGBoost a depășit ARIMA și Prophet în analiza piețelor financiare).
+
+Pentru o validare completă, ipoteza va fi testată și în cadrul celorlalte trei studii de caz ce vor fi implementate pentru prezentarea finală a proiectului cum ar fi: prezicerea vânzărilor viitoare sau a cererii pentru furnizarea de stocuri.
+
+
+\printbibliography[title={Bibliografie}]
+
+\end{document}
