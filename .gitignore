@@ -1,2 +1,5 @@
 dataset/
 data_chunks/
+output/
+chatbot/
+multi-class-logs/
